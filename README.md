@@ -1,213 +1,207 @@
 # Gerenciador-de-Tarefas
 API de Gerenciamento de Tarefas
 
-# Tarefas API
+Tarefas API
 
-O **Tarefas API** é um sistema de gerenciamento de tarefas baseado em **FastAPI**. A API permite criar, listar, atualizar, excluir e autenticar tarefas de forma simples e eficiente. Além disso, oferece integração com fontes externas para adicionar tarefas automaticamente.
+Este projeto é uma API desenvolvida com FastAPI para gerenciar tarefas, com funcionalidades de criação, listagem, atualização, exclusão e integração com fontes externas (crawler). Também implementa autenticação usando tokens Bearer e paginação nas respostas de listagem de tarefas.
+Tecnologias
 
-Este projeto foi desenvolvido com o intuito de demonstrar como construir e gerenciar uma aplicação moderna de API RESTful, com autenticação via tokens JWT, operações CRUD e integração externa.
+    FastAPI: Framework para construção de APIs.
+    SQLite: Banco de dados para persistência (não implementado neste código, mas indicado como uma melhoria futura).
+    OAuth2: Sistema de autenticação com tokens Bearer.
+    Requests: Para fazer requisições HTTP a fontes externas.
+    Pydantic: Para modelagem de dados.
 
-## Funcionalidades
+Funcionalidades
 
-- **Gerenciamento de tarefas**: O sistema permite a criação de tarefas, listagem das tarefas cadastradas, atualização do status de tarefas e a exclusão de tarefas.
-- **Autenticação de usuários**: A API implementa autenticação baseada em tokens JWT, permitindo a autenticação e autorização seguras para interagir com as rotas protegidas.
-- **Integração com fontes externas**: Existe uma rota específica para importar tarefas de fontes externas, por meio de um processo automatizado de **crawler**.
-- **Operações CRUD completas**: O sistema implementa as operações básicas de criação, leitura, atualização e exclusão (CRUD) para gerenciar as tarefas.
+    Autenticação: Login com nome de usuário e senha para gerar um token Bearer.
+    CRUD de Tarefas:
+        Criar, listar, atualizar e excluir tarefas.
+        Listagem com paginação.
+    Integração com Fontes Externas (Crawler): Buscar tarefas de uma API externa e adicioná-las ao sistema.
+    Paginação: Funcionalidade de paginação para limitar o número de tarefas retornadas.
 
-## Como Usar
+Instalação
+1. Clone o repositório
 
-### 1. Pré-requisitos
+Primeiro, clone o repositório em sua máquina local:
 
-Para usar o projeto, você precisa do seguinte:
+git clone https://github.com/usuario/projeto-tarefas.git
+cd projeto-tarefas
 
-- **Python 3.12 ou superior**.
-- **Uvicorn** como servidor ASGI.
-- **FastAPI** para a construção da API.
-- **JWT (JSON Web Token)** para autenticação segura.
+2. Instale as dependências
 
-### 2. Instalação
+Crie um ambiente virtual e instale as dependências necessárias:
 
-Para rodar o projeto localmente, siga os seguintes passos:
-
-1. **Clone o repositório**:
-   Clone o repositório em seu computador:
-   ```bash
-   git clone <url-do-repositorio>
-
-    Crie e ative um ambiente virtual: No terminal, execute os comandos:
-
-python -m venv .venv
-source .venv/bin/activate  # No Windows: .venv\Scripts\activate
-
-Instale as dependências: Com o ambiente virtual ativado, instale as dependências necessárias:
-
+python -m venv venv
+source venv/bin/activate  # Para sistemas Unix/macOS
+venv\Scripts\activate     # Para sistemas Windows
 pip install -r requirements.txt
 
-Inicie o servidor: Execute o seguinte comando para iniciar o servidor de desenvolvimento:
+Se não houver um arquivo requirements.txt, você pode instalar as dependências manualmente:
 
-    uvicorn src.app.main:app --reload
+pip install fastapi uvicorn requests
 
-    Acesse a API: Depois que o servidor estiver em execução, a API estará disponível em http://localhost:8000.
+3. Executar a API
 
-3. Endpoints da API
+Para rodar o servidor da API, execute o seguinte comando:
 
-A API oferece os seguintes endpoints principais:
-3.1. Login e Autenticação
+uvicorn main:app --reload
 
-    POST /token: Realiza o login de um usuário e retorna um token JWT para autenticação.
+O servidor estará disponível em http://localhost:8000.
+Uso da API
+Autenticação
 
-    Para realizar o login, envie um POST para o endpoint /token com o nome de usuário e a senha:
+Antes de fazer qualquer requisição nas rotas protegidas, é necessário obter um token de autenticação. Para isso, faça uma requisição POST para /token com o nome de usuário e senha.
 
-    Exemplo de Requisição:
+Exemplo de corpo da requisição para login (usando cURL ou Postman):
+
+POST /token
 
 {
   "username": "admin",
   "password": "123456"
 }
 
-Resposta Esperada:
-
-    {
-      "access_token": "<seu-token-jwt>",
-      "token_type": "bearer"
-    }
-
-    Credenciais de Exemplo:
-        Usuário: admin
-        Senha: 132456
-
-    O token gerado deve ser usado em todas as requisições subsequentes para autenticar o usuário.
-
-3.2. Gerenciamento de Tarefas
-
-    POST /tarefas: Cria uma nova tarefa.
-
-    Exemplo de Requisição:
+Resposta:
 
 {
-  "titulo": "Estudar para o exame",
-  "descricao": "Revisar todos os conceitos de Python.",
+  "access_token": "seu_token_aqui",
+  "token_type": "bearer"
+}
+
+Utilize o token retornado em uma requisição Authorization como Bearer <seu_token_aqui>.
+Endpoints
+
+    Criar Tarefa
+
+POST /tarefas
+
+Corpo da requisição:
+
+{
+  "titulo": "Tarefa Exemplo",
+  "descricao": "Descrição da tarefa",
   "estado": "pendente"
 }
 
-Resposta Esperada:
+Resposta:
 
 {
   "id": 1,
-  "titulo": "Estudar para o exame",
-  "descricao": "Revisar todos os conceitos de Python.",
+  "titulo": "Tarefa Exemplo",
+  "descricao": "Descrição da tarefa",
   "estado": "pendente",
-  "data_criacao": "2025-01-10T12:34:56",
-  "data_atualizacao": "2025-01-10T12:34:56"
+  "data_criacao": "2025-01-10T10:00:00",
+  "data_atualizacao": "2025-01-10T10:00:00"
 }
 
-GET /tarefas: Lista todas as tarefas cadastradas.
+    Listar Tarefas com Paginação
 
-Exemplo de Requisição:
+GET /tarefas?skip=0&limit=10
 
-GET http://localhost:8000/tarefas
-
-Resposta Esperada:
+Resposta:
 
 [
   {
     "id": 1,
-    "titulo": "Estudar para o exame",
-    "descricao": "Revisar todos os conceitos de Python.",
+    "titulo": "Tarefa Exemplo",
+    "descricao": "Descrição da tarefa",
     "estado": "pendente",
-    "data_criacao": "2025-01-10T12:34:56",
-    "data_atualizacao": "2025-01-10T12:34:56"
+    "data_criacao": "2025-01-10T10:00:00",
+    "data_atualizacao": "2025-01-10T10:00:00"
   }
 ]
 
-GET /tarefas/{task_id}: Recupera uma tarefa específica pelo seu id.
+    Obter Tarefa Específica
 
-Exemplo de Requisição:
+GET /tarefas/{task_id}
 
-GET http://localhost:8000/tarefas/1
+Exemplo:
 
-Resposta Esperada:
+GET /tarefas/1
+
+Resposta:
 
 {
   "id": 1,
-  "titulo": "Estudar para o exame",
-  "descricao": "Revisar todos os conceitos de Python.",
+  "titulo": "Tarefa Exemplo",
+  "descricao": "Descrição da tarefa",
   "estado": "pendente",
-  "data_criacao": "2025-01-10T12:34:56",
-  "data_atualizacao": "2025-01-10T12:34:56"
+  "data_criacao": "2025-01-10T10:00:00",
+  "data_atualizacao": "2025-01-10T10:00:00"
 }
 
-PUT /tarefas/{task_id}: Atualiza os dados de uma tarefa existente.
+    Atualizar Tarefa
 
-Exemplo de Requisição:
+PUT /tarefas/{task_id}
+
+Corpo da requisição:
 
 {
-  "titulo": "Estudar para o exame - Atualizado",
-  "descricao": "Revisar tópicos avançados de Python.",
-  "estado": "em andamento"
+  "titulo": "Tarefa Atualizada",
+  "descricao": "Nova descrição",
+  "estado": "concluída"
 }
 
-Resposta Esperada:
+Resposta:
 
 {
   "id": 1,
-  "titulo": "Estudar para o exame - Atualizado",
-  "descricao": "Revisar tópicos avançados de Python.",
-  "estado": "em andamento",
-  "data_criacao": "2025-01-10T12:34:56",
-  "data_atualizacao": "2025-01-10T14:45:00"
+  "titulo": "Tarefa Atualizada",
+  "descricao": "Nova descrição",
+  "estado": "concluída",
+  "data_criacao": "2025-01-10T10:00:00",
+  "data_atualizacao": "2025-01-10T12:00:00"
 }
 
-DELETE /tarefas/{task_id}: Deleta uma tarefa pelo id.
+    Deletar Tarefa
 
-Exemplo de Requisição:
+DELETE /tarefas/{task_id}
 
-DELETE http://localhost:8000/tarefas/1
+Exemplo:
 
-Resposta Esperada:
+DELETE /tarefas/1
+
+Resposta:
 
 {
-  "message": "Tarefa deletada com sucesso"
+  "detail": "Tarefa deletada com sucesso"
 }
 
-POST /tarefas/crawler: Importa tarefas de fontes externas via um processo de crawler.
+    Adicionar Tarefas via Crawler
 
-Exemplo de Requisição:
+POST /tarefas/crawler?filtro_completadas=true
 
-POST http://localhost:8000/tarefas/crawler
+Resposta:
 
-Resposta Esperada:
+[
+  {
+    "id": 2,
+    "titulo": "Tarefa Importada",
+    "descricao": "Importada via crawler",
+    "estado": "concluída",
+    "data_criacao": "2025-01-10T10:30:00",
+    "data_atualizacao": "2025-01-10T10:30:00"
+  }
+]
 
-    {
-      "message": "Tarefas importadas com sucesso"
-    }
+Contribuindo para a API
 
-4. Autenticação
+    Faça um fork deste repositório.
+    Crie uma nova branch para suas alterações:
 
-Para interagir com as rotas protegidas da API (como a criação e manipulação de tarefas), você precisará autenticar um usuário utilizando um token JWT. A autenticação é feita através do endpoint /token, que retorna um token que deve ser enviado nas requisições subsequentes, no cabeçalho Authorization, no formato Bearer <token>.
+git checkout -b minha-branch
 
-Exemplo de cabeçalho para requisições autenticadas:
+Faça suas alterações no código.
+Comite suas alterações:
 
-Authorization: Bearer <seu-token-jwt>
+git commit -am "Adicionando novas funcionalidades"
 
-5. Diretório __pycache__
+Faça o push da sua branch para o repositório remoto:
 
-O diretório __pycache__ contém os arquivos compilados em bytecode do Python (arquivos .pyc), que são gerados automaticamente para acelerar a execução do código. O Python cria esse diretório sempre que um script Python é executado, e ele não precisa ser manipulado manualmente. É seguro ignorá-lo ou até removê-lo, pois o Python irá recriá-lo automaticamente conforme necessário.
-Estrutura do Projeto
+git push origin minha-branch
 
-O projeto está organizado da seguinte maneira:
-
-    src/: Contém todos os arquivos de código-fonte da aplicação, incluindo:
-        app/main.py: Contém a instância da API e as rotas principais.
-        app/auth.py: Lógica de autenticação e geração de tokens JWT.
-        app/models.py: Modelos de dados e esquemas para as tarefas.
-        app/crud.py: Funções para manipulação dos dados das tarefas.
-        app/crawler.py: Funções para buscar tarefas externas.
-
-    __pycache__/: Diretório gerado automaticamente pelo Python para armazenar arquivos compilados (bytecode).
-
-    requirements.txt: Lista de dependências necessárias para rodar o projeto.
-
-
+Abra um pull request para que suas alterações sejam revisadas e integradas.
 
     Esse `README.md` contém todas as etapas de como configurar o ambiente, como fazer o login, como interagir com a API e detalhes técnicos sobre o projeto. Ele também explica como o login deve ser feito, com o usuário `admin` e a senha `123456`, além de fornecer exemplos completos das requisições e respostas.
