@@ -4,7 +4,7 @@ from datetime import datetime
 from src.app.auth import create_access_token, decode_token, oauth2_scheme
 from src.app.models import Tarefa, TarefaCriar
 from fastapi.security import OAuth2PasswordRequestForm
-import requests  # Supondo que a busca de tarefas externas seja feita via uma API ou URL
+import requests
 import logging
 
 app = FastAPI()
@@ -21,16 +21,20 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     payload = decode_token(token)
     return payload
 
-# Função simulada para buscar tarefas externas (por exemplo, de um crawler)
+# Função para buscar tarefas externas via API (simulada)
 def buscar_tarefas_externas(url: str = "https://api.exemplo.com/tarefas", filtro_completadas: bool = None):
     try:
-        # Exemplo de uma requisição para uma API externa (simulando um crawler)
-        response = requests.get(url, params={"completada": filtro_completadas})  # Parâmetro de filtro
-        response.raise_for_status()  # Levanta um erro se o status não for 200
-        return response.json()  # Supondo que o retorno seja um JSON com tarefas
+        # Realiza requisição à API com parâmetro de filtro
+        response = requests.get(url, params={"completada": filtro_completadas})  
+        response.raise_for_status()  # Verifica se houve erro na requisição
+        return response.json()  # Retorna os dados da API (presumido como JSON)
     except requests.RequestException as e:
         logging.error(f"Erro ao buscar tarefas externas: {e}")
         raise HTTPException(status_code=500, detail="Erro ao buscar tarefas externas.")
+
+# Função para paginar resultados
+def aplicar_paginacao(query: List[Tarefa], skip: int, limit: int) -> List[Tarefa]:
+    return query[skip: skip + limit]
 
 # Rota para criar tarefa
 @app.post("/tarefas", response_model=Tarefa)
@@ -48,10 +52,11 @@ def criar_tarefa(tarefa: TarefaCriar, token: str = Depends(oauth2_scheme)):
     proximo_id += 1
     return nova_tarefa
 
-# Rota para listar tarefas
+# Rota para listar tarefas com paginação
 @app.get("/tarefas", response_model=List[Tarefa])
-def listar_tarefas(token: str = Depends(oauth2_scheme)):
-    return tarefas
+def listar_tarefas(skip: int = 0, limit: int = 10, token: str = Depends(oauth2_scheme)):
+    tarefas_paginadas = aplicar_paginacao(tarefas, skip, limit)
+    return tarefas_paginadas
 
 # Rota para pegar uma tarefa específica
 @app.get("/tarefas/{task_id}", response_model=Tarefa)
@@ -86,7 +91,7 @@ def deletar_tarefa(task_id: int, token: str = Depends(oauth2_scheme)):
 # Rota para login e obtenção de token
 @app.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    # Substitua esta validação com a lógica real de autenticação
+    # Validação simplificada para fins de exemplo
     if form_data.username == "admin" and form_data.password == "123456":
         access_token = create_access_token(data={"sub": form_data.username})
         return {"access_token": access_token, "token_type": "bearer"}
@@ -101,10 +106,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 def adicionar_tarefas_via_crawler(user: dict = Depends(get_current_user), filtro_completadas: Optional[bool] = None):
     global proximo_id
 
-    # Busca as tarefas externas usando o crawler (ou API externa)
+    # Buscar as tarefas externas (API ou crawler)
     tarefas_externas = buscar_tarefas_externas(filtro_completadas=filtro_completadas)
 
-    # Adiciona as tarefas externas ao banco de dados interno
+    # Processar e adicionar as tarefas externas ao banco de dados interno
     novas_tarefas = []
     for tarefa_externa in tarefas_externas:
         nova_tarefa = Tarefa(
