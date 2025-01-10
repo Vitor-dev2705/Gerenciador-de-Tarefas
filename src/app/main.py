@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 from src.app.auth import create_access_token, decode_token, oauth2_scheme
 from src.app.models import Tarefa, TarefaCriar
 from fastapi.security import OAuth2PasswordRequestForm
+import requests  # Supondo que a busca de tarefas externas seja feita via uma API ou URL
+import logging
 
 app = FastAPI()
 
@@ -11,19 +13,24 @@ app = FastAPI()
 tarefas: List[Tarefa] = []
 proximo_id = 1
 
+# Configuração de Log
+logging.basicConfig(level=logging.INFO)
+
 # Função para verificar o token de autenticação
 def get_current_user(token: str = Depends(oauth2_scheme)):
     payload = decode_token(token)
     return payload
 
 # Função simulada para buscar tarefas externas (por exemplo, de um crawler)
-def buscar_tarefas_externas():
-    # Esta função simula a busca de tarefas externas, como um crawler faria.
-    return [
-        {"title": "Tarefa Externa 1", "completed": False},
-        {"title": "Tarefa Externa 2", "completed": True},
-    ]
-
+def buscar_tarefas_externas(url: str = "https://api.exemplo.com/tarefas", filtro_completadas: bool = None):
+    try:
+        # Exemplo de uma requisição para uma API externa (simulando um crawler)
+        response = requests.get(url, params={"completada": filtro_completadas})  # Parâmetro de filtro
+        response.raise_for_status()  # Levanta um erro se o status não for 200
+        return response.json()  # Supondo que o retorno seja um JSON com tarefas
+    except requests.RequestException as e:
+        logging.error(f"Erro ao buscar tarefas externas: {e}")
+        raise HTTPException(status_code=500, detail="Erro ao buscar tarefas externas.")
 
 # Rota para criar tarefa
 @app.post("/tarefas", response_model=Tarefa)
@@ -91,11 +98,11 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 # Rota para adicionar tarefas via crawler (ou fonte externa)
 @app.post("/tarefas/crawler", response_model=List[Tarefa])
-def adicionar_tarefas_via_crawler(user: dict = Depends(get_current_user)):
+def adicionar_tarefas_via_crawler(user: dict = Depends(get_current_user), filtro_completadas: Optional[bool] = None):
     global proximo_id
 
-    # Busca as tarefas externas usando o crawler
-    tarefas_externas = buscar_tarefas_externas()
+    # Busca as tarefas externas usando o crawler (ou API externa)
+    tarefas_externas = buscar_tarefas_externas(filtro_completadas=filtro_completadas)
 
     # Adiciona as tarefas externas ao banco de dados interno
     novas_tarefas = []
@@ -112,4 +119,5 @@ def adicionar_tarefas_via_crawler(user: dict = Depends(get_current_user)):
         novas_tarefas.append(nova_tarefa)
         proximo_id += 1
 
+    logging.info(f"{len(novas_tarefas)} novas tarefas adicionadas via crawler.")
     return novas_tarefas
