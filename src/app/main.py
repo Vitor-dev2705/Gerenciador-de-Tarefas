@@ -24,6 +24,7 @@ def buscar_tarefas_externas():
         {"title": "Tarefa Externa 2", "completed": True},
     ]
 
+
 # Rota para criar tarefa
 @app.post("/tarefas", response_model=Tarefa)
 def criar_tarefa(tarefa: TarefaCriar, token: str = Depends(oauth2_scheme)):
