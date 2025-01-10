@@ -26,8 +26,8 @@ Instalação
 
 Primeiro, clone o repositório em sua máquina local:
 
-git clone https://github.com/usuario/projeto-tarefas.git
-cd projeto-tarefas
+git clone https://github.com/Vitor-dev2705/Gerenciador-de-Tarefas.git
+cd Gerenciador-de-Tarefas
 
 2. Instale as dependências
 
