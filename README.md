@@ -210,4 +210,4 @@ O projeto está organizado da seguinte maneira:
 
 
 
-    Esse `README.md` contém todas as etapas de como configurar o ambiente, como fazer o login, como interagir com a API e detalhes técnicos sobre o projeto. Ele também explica como o login deve ser feito, com o usuário `vitor` e a senha `teles`, além de fornecer exemplos completos das requisições e respostas.
+    Esse `README.md` contém todas as etapas de como configurar o ambiente, como fazer o login, como interagir com a API e detalhes técnicos sobre o projeto. Ele também explica como o login deve ser feito, com o usuário `admin` e a senha `123456`, além de fornecer exemplos completos das requisições e respostas.
