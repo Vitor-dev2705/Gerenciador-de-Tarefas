@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import Optional
 from typing import Literal
@@ -12,7 +12,7 @@ class Tarefa(BaseModel):
     data_criacao: datetime
     data_atualizacao: datetime
 
-    @field_validator("estado")
+    @validator("estado")
     def validar_estado(cls, valor):
         if valor not in ["pendente", "em andamento", "concluída"]:
             raise HTTPException(
@@ -26,7 +26,7 @@ class TarefaCriar(BaseModel):
     descricao: Optional[str] = None
     estado: Literal["pendente", "em andamento", "concluída"]  # Apenas esses valores são permitidos
 
-    @field_validator("estado")
+    @validator("estado")
     def validar_estado(cls, valor):
         if valor not in ["pendente", "em andamento", "concluída"]:
             raise HTTPException(

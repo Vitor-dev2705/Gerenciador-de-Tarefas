@@ -92,7 +92,7 @@ def deletar_tarefa(task_id: int, token: str = Depends(oauth2_scheme)):
 @app.post("/token")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
     # Validação simplificada para fins de exemplo
-    if form_data.username == "admin" and form_data.password == "123456":
+    if form_data.username == "vitor" and form_data.password == "teles":
         access_token = create_access_token(data={"sub": form_data.username})
         return {"access_token": access_token, "token_type": "bearer"}
     raise HTTPException(
@@ -126,3 +126,4 @@ def adicionar_tarefas_via_crawler(user: dict = Depends(get_current_user), filtro
 
     logging.info(f"{len(novas_tarefas)} novas tarefas adicionadas via crawler.")
     return novas_tarefas
+
